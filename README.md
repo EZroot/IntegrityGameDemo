@@ -5,6 +5,7 @@ A minimal example project demonstrating the core features and setup of the **Int
 * **Engine GitHub:** [https://github.com/EZroot/Integrity2D](https://github.com/EZroot/Integrity2D)
 * **Engine Documentation:** [https://ezroot.github.io/Integrity2D/](https://ezroot.github.io/Integrity2D/)
 
+<img src="Screenshots/screenshot_0.png" width="600" alt="DemoScreenshot"/>
 ---
 
 ## Project Setup
