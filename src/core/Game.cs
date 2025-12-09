@@ -1,4 +1,5 @@
 using System.Numerics;
+using Integrity.Components;
 using Integrity.Core;
 using Integrity.Interface;
 using Integrity.Rendering;
@@ -52,19 +53,21 @@ public class Game : IGame
 
         var pinkface = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/pink_face.png");
         var yellowface = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/yellow_face.png");
-        
-        var stress = 10000;
-        for(var i = 0; i < stress; i++)
-        {
-            var blueface = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/blue_face.png");
-            var rand = new Random();
-            blueface.Transform.X = rand.Next(-1000, 1000);
-            blueface.Transform.Y = rand.Next(-1000, 1000);
-            defaultScene.RegisterGameObject(blueface);   
-        }
+        var spriteComponent = yellowface.GetComponent<SpriteComponent>();
+        spriteComponent.SourceRect = new Integrity.Utils.Rect(5,5,15,15);
+
+        // var stress = 10000;
+        // for(var i = 0; i < stress; i++)
+        // {
+        //     var blueface = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/blue_face.png");
+        //     var rand = new Random();
+        //     blueface.Transform.X = rand.Next(-1000, 1000);
+        //     blueface.Transform.Y = rand.Next(-1000, 1000);
+        //     defaultScene.RegisterGameObject(blueface);   
+        // }
 
         // Here we register our SpriteObjects with our Scene being the container
-        defaultScene.RegisterGameObject(logo);
+        // defaultScene.RegisterGameObject(logo);
         defaultScene.RegisterGameObject(pinkface);
         defaultScene.RegisterGameObject(yellowface);
 
