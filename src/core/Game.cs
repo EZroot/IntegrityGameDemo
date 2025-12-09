@@ -29,25 +29,35 @@ public class Game : IGame
     // 0: Water, 1: Grass, 2: Wall
     private readonly int[,] m_MapData = new int[,]
     {
-        { 0, 0, 0, 0, 0, 0, 0, 0 },
-        { 0, 1, 1, 1, 1, 1, 1, 0 },
-        { 0, 1, 1, 2, 2, 1, 1, 0 },
-        { 0, 1, 2, 2, 2, 2, 1, 0 },
-        { 0, 1, 2, 2, 2, 2, 1, 0 },
-        { 0, 1, 1, 1, 2, 1, 1, 0 },
-        { 0, 1, 1, 1, 1, 1, 1, 0 },
-        { 0, 0, 0, 0, 0, 0, 0, 0 }
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0 },
+        { 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0 },
+        { 0, 1, 1, 1, 1, 1, 2, 2, 2, 1, 1, 1, 1, 1, 0, 0 },
+        { 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0 },
+        { 0, 1, 2, 2, 3, 3, 3, 3, 2, 2, 2, 1, 1, 1, 0, 0 },
+        { 0, 1, 2, 3, 3, 4, 4, 3, 3, 2, 2, 1, 1, 1, 0, 0 },
+        { 0, 1, 2, 3, 4, 4, 4, 4, 3, 3, 2, 2, 1, 1, 0, 0 },
+        { 0, 1, 2, 3, 3, 4, 4, 3, 3, 3, 2, 1, 1, 1, 0, 0 },
+        { 0, 1, 1, 2, 2, 3, 3, 3, 2, 2, 1, 1, 1, 0, 0, 0 },
+        { 0, 1, 1, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 0, 0, 0 },
+        { 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0 },
+        { 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }
     };
 
     // Assign tile type to the relavent map data
     Dictionary<int, Rect> tileMapping = new()
     {
-        { 0, new Rect(0, 32, 32, 32) }, // Water 
-        { 1, new Rect(0, 0, 32, 32) },  // Grass 
-        { 2, new Rect(32, 0, 32, 32) }  // Wall 
+        { 0, new Rect(0, 0, 16, 16) }, // Water 
+        { 1, new Rect(16, 0, 16, 16) },  // Grass 
+        { 2, new Rect(32, 0, 16, 16) },  // Mud 
+        { 3, new Rect(48, 0, 16, 16) },  // Sand 
+        { 4, new Rect(64, 0, 16, 16) }  // Rock
     };
 
-    private const int TILE_SIZE = 16;
+    private const int TILE_SIZE = 32;
 
     Integrity.Assets.Texture? tileAtlas;
 
@@ -115,10 +125,13 @@ public class Game : IGame
         }
 
         // Load a tilemap atlas to draw based on our map data
-        tileAtlas = m_AssetManager.GetTexture("Content/atlas.png");
+        tileAtlas = m_AssetManager.GetTexture("Content/tile_atlas.png");
 
         // Loop the tile map and set the tile in our tile render system
         TileRenderSystem tileSystem = defaultScene.TileRenderSystem;
+
+        // Set the size of each tile before we assign them
+        tileSystem.SetTileSize(TILE_SIZE);
 
         int mapWidth = m_MapData.GetLength(0);
         int mapHeight = m_MapData.GetLength(1);
