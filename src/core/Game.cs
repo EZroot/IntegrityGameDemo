@@ -38,6 +38,15 @@ public class Game : IGame
         { 0, 1, 1, 1, 1, 1, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0, 0 }
     };
+
+    // Assign tile type to the relavent map data
+    Dictionary<int, Rect> tileMapping = new()
+    {
+        { 0, new Rect(0, 32, 32, 32) }, // Water 
+        { 1, new Rect(0, 0, 32, 32) },  // Grass 
+        { 2, new Rect(32, 0, 32, 32) }  // Wall 
+    };
+
     private const int TILE_SIZE = 16;
 
     Integrity.Assets.Texture? tileAtlas;
@@ -69,6 +78,7 @@ public class Game : IGame
 
         // Create a simple object with a sprite
         var pinkface = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/pink_face.png");
+
         // Here we register our SpriteObjects with our Scene being the container
         defaultScene.RegisterGameObject(pinkface);
 
@@ -106,14 +116,6 @@ public class Game : IGame
 
         // Load a tilemap atlas to draw based on our map data
         tileAtlas = m_AssetManager.GetTexture("Content/atlas.png");
-
-        // Assign tile type to the relavent map data
-        Dictionary<int, Rect> tileMapping = new()
-        {
-            { 0, new Rect(0, 32, 32, 32) }, // Water 
-            { 1, new Rect(0, 0, 32, 32) },  // Grass 
-            { 2, new Rect(32, 0, 32, 32) }  // Wall 
-        };
 
         // Loop the tile map and set the tile in our tile render system
         TileRenderSystem tileSystem = defaultScene.TileRenderSystem;
@@ -168,6 +170,28 @@ public class Game : IGame
             m_CameraManager.MainCamera!.Position += new Vector2(-m_CameraSpeed * deltaTime, 0);
         if (m_InputManager.IsKeyDown(Scancode.ScancodeD))
             m_CameraManager.MainCamera!.Position += new Vector2(m_CameraSpeed * deltaTime, 0);
+
+
+        // Randomize a tile map tile
+        if (m_InputManager.IsKeyDown(Scancode.ScancodeSpace))
+        {
+            var r = new Random();
+            var mapX = 1;
+            var mapY = 3;
+            var tileId = r.Next(0, 3);
+            m_MapData[mapX, mapY] = tileId;
+
+            var tileSys = Service.Get<ISceneManager>()!.CurrentScene.TileRenderSystem;
+            if (tileMapping.TryGetValue(tileId, out Rect sourceRect))
+            {
+                tileSys.SetTile(
+                    mapX: mapX,
+                    mapY: mapY,
+                    texture: tileAtlas,
+                    sourceRect: sourceRect
+                );
+            }
+        }
     }
 
     public void Render()
