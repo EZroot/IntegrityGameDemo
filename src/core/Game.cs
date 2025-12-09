@@ -4,6 +4,7 @@ using Integrity.Core;
 using Integrity.Interface;
 using Integrity.Rendering;
 using Integrity.Scenes;
+using Integrity.Utils;
 using Silk.NET.SDL;
 
 /// <summary>
@@ -21,8 +22,25 @@ public class Game : IGame
     private readonly ISceneManager m_SceneManager;
     private readonly ICameraManager m_CameraManager;
     private readonly IGameObjectFactory m_GameObjectFactory;
+    private readonly IAssetManager m_AssetManager;
 
     const float m_CameraSpeed = 300.0f;
+
+    // 0: Water, 1: Grass, 2: Wall
+    private readonly int[,] m_MapData = new int[,]
+    {
+        { 0, 0, 0, 0, 0, 0, 0, 0 },
+        { 0, 1, 1, 1, 1, 1, 1, 0 },
+        { 0, 1, 1, 2, 2, 1, 1, 0 },
+        { 0, 1, 2, 2, 2, 2, 1, 0 },
+        { 0, 1, 2, 2, 2, 2, 1, 0 },
+        { 0, 1, 1, 1, 2, 1, 1, 0 },
+        { 0, 1, 1, 1, 1, 1, 1, 0 },
+        { 0, 0, 0, 0, 0, 0, 0, 0 }
+    };
+    private const int TILE_SIZE = 16;
+
+    Integrity.Assets.Texture? tileAtlas;
 
     public Game()
     {
@@ -34,6 +52,7 @@ public class Game : IGame
         m_SceneManager = Service.Get<ISceneManager>() ?? throw new Exception("Scene Manager service not found.");
         m_CameraManager = Service.Get<ICameraManager>() ?? throw new Exception("Camera Manager service not found.");
         m_GameObjectFactory = Service.Get<IGameObjectFactory>() ?? throw new Exception("GameObjectFactory service not found.");
+        m_AssetManager = Service.Get<IAssetManager>() ?? throw new Exception("AssetManager could not be found!");
     }
 
     public void Initialize()
@@ -85,6 +104,41 @@ public class Game : IGame
             defaultScene.RegisterGameObject(yellowface);
         }
 
+        // Load a tilemap atlas to draw based on our map data
+        tileAtlas = m_AssetManager.GetTexture("Content/atlas.png");
+
+        // Assign tile type to the relavent map data
+        Dictionary<int, Rect> tileMapping = new()
+        {
+            { 0, new Rect(0, 32, 32, 32) }, // Water 
+            { 1, new Rect(0, 0, 32, 32) },  // Grass 
+            { 2, new Rect(32, 0, 32, 32) }  // Wall 
+        };
+
+        // Loop the tile map and set the tile in our tile render system
+        TileRenderSystem tileSystem = defaultScene.TileRenderSystem;
+
+        int mapWidth = m_MapData.GetLength(0);
+        int mapHeight = m_MapData.GetLength(1);
+        for (int x = 0; x < mapWidth; x++)
+        {
+            for (int y = 0; y < mapHeight; y++)
+            {
+                int tileId = m_MapData[x, y];
+                if (tileMapping.TryGetValue(tileId, out Rect sourceRect))
+                {
+                    // Call the SetTile method to add the tile data to the appropriate chunk
+                    // The TileRenderSystem handles the chunking, geometry creation, and VBO flagging.
+                    tileSystem.SetTile(
+                        mapX: x,
+                        mapY: y,
+                        texture: tileAtlas,
+                        sourceRect: sourceRect
+                    );
+                }
+            }
+        }
+
         // Add our scene to our scene manager map
         m_SceneManager.AddScene(defaultScene);
 
@@ -93,7 +147,7 @@ public class Game : IGame
         m_SceneManager.LoadScene(defaultScene);
 
         // We NEED a default camera or the engine will abort since there is no point to render
-        // Multiple cameras are not supported
+        // ** Multiple cameras are currently not supported **
         // Doc: https://ezroot.github.io/Integrity2D/api/Integrity.Rendering.html
 
         Camera2D mainCamera = new Camera2D("MainCamera", m_Settings.Data.WindowWidth, m_Settings.Data.WindowHeight);
