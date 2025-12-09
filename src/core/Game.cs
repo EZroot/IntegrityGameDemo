@@ -47,27 +47,34 @@ public class Game : IGame
         // But SpriteObject works best with our engine Renderer
         // Objects: https://ezroot.github.io/Integrity2D/api/Integrity.Objects.html
         // Components: https://ezroot.github.io/Integrity2D/api/Integrity.Components.html
-        var logo = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/logo.png");
-        logo.Transform.ScaleX = 0.25f;
-        logo.Transform.ScaleY = 0.25f;
 
+        // Create a simple object with a sprite
         var pinkface = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/pink_face.png");
-        var yellowface = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/yellow_face.png");
-        var spriteComponent = yellowface.GetComponent<SpriteComponent>();
-        spriteComponent.SourceRect = new Integrity.Utils.Rect(5,5,15,15);
 
-        // var stress = 10000;
-        // for(var i = 0; i < stress; i++)
-        // {
-        //     var blueface = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/blue_face.png");
-        //     var rand = new Random();
-        //     blueface.Transform.X = rand.Next(-1000, 1000);
-        //     blueface.Transform.Y = rand.Next(-1000, 1000);
-        //     defaultScene.RegisterGameObject(blueface);   
-        // }
+        // Example of using an atlas, with animation
+        var yellowface = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/atlas.png");
+        var spriteComponent = yellowface.GetComponent<SpriteComponent>();
+
+        // Set the intial atlas UV position of our sprite
+        spriteComponent.SourceRect = new Integrity.Utils.Rect(0,0,32,32);
+
+        // Create an animation component to store our frames
+        var animationComponent = new Integrity.Components.AnimationComponent();
+
+        // Using an array of our UV rect positions on the atlas for each frame along with the frame time
+        var animationIdleFrames = new Integrity.Components.AnimationFrame[4];
+        animationIdleFrames[0] = new Integrity.Components.AnimationFrame(new Integrity.Utils.Rect(0,0,32,32), 0.25f);
+        animationIdleFrames[1] = new Integrity.Components.AnimationFrame(new Integrity.Utils.Rect(32,0,32,32), 0.25f);
+        animationIdleFrames[2] = new Integrity.Components.AnimationFrame(new Integrity.Utils.Rect(64,0,32,32), 0.25f);
+        animationIdleFrames[3] = new Integrity.Components.AnimationFrame(new Integrity.Utils.Rect(98,0,32,32), 0.25f);
+
+        // Add our animation frames to our animation component
+        animationComponent.AddAnimation("Idle", animationIdleFrames);
+
+        // Add our component to our sprite game object
+        yellowface.AddComponent(animationComponent);
 
         // Here we register our SpriteObjects with our Scene being the container
-        // defaultScene.RegisterGameObject(logo);
         defaultScene.RegisterGameObject(pinkface);
         defaultScene.RegisterGameObject(yellowface);
 
