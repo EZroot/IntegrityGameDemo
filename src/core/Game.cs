@@ -23,6 +23,7 @@ public class Game : IGame
     private readonly ICameraManager m_CameraManager;
     private readonly IGameObjectFactory m_GameObjectFactory;
     private readonly IAssetManager m_AssetManager;
+    private readonly IAudioManager m_AudioManager;
 
     const float m_CameraSpeed = 300.0f;
 
@@ -48,7 +49,7 @@ public class Game : IGame
     };
 
     // Assign tile type to the relavent map data
-    Dictionary<int, Rect> tileMapping = new()
+    Dictionary<int, Rect> m_TileMapping = new()
     {
         { 0, new Rect(0, 0, 16, 16) }, // Water 
         { 1, new Rect(16, 0, 16, 16) },  // Grass 
@@ -59,7 +60,7 @@ public class Game : IGame
 
     private const int TILE_SIZE = 32;
 
-    Integrity.Assets.Texture? tileAtlas;
+    Integrity.Assets.Texture? m_TileAtlas;
 
     public Game()
     {
@@ -72,19 +73,20 @@ public class Game : IGame
         m_CameraManager = Service.Get<ICameraManager>() ?? throw new Exception("Camera Manager service not found.");
         m_GameObjectFactory = Service.Get<IGameObjectFactory>() ?? throw new Exception("GameObjectFactory service not found.");
         m_AssetManager = Service.Get<IAssetManager>() ?? throw new Exception("AssetManager could not be found!");
+        m_AudioManager = Service.Get<IAudioManager>() ?? throw new Exception("AudioManager could not be found!");
     }
 
     public void Initialize()
     {
-        // We create our scene that will serve as a base to store and render our SpriteObjects
-        Scene defaultScene = new Scene("DefaultScene");
-
         // Using GameObjectFactory we can create GameObjects (A Base Game Object class that only has a Transform Component)
         // In this instance, we use SpriteObject, which will default with a Transform Component and a SpriteComponent
         // You can build a SpriteObject yourself by adding any component you want
         // But SpriteObject works best with our engine Renderer
         // Objects: https://ezroot.github.io/Integrity2D/api/Integrity.Objects.html
         // Components: https://ezroot.github.io/Integrity2D/api/Integrity.Components.html
+
+        // We create our scene that will serve as a base to store and render our SpriteObjects
+        Scene defaultScene = new Scene("DefaultScene");
 
         // Create a simple object with a sprite
         var pinkface = m_GameObjectFactory.CreateSpriteObject("TestGameObject", "Content/pink_face.png");
@@ -125,14 +127,13 @@ public class Game : IGame
         }
 
         // Load a tilemap atlas to draw based on our map data
-        tileAtlas = m_AssetManager.GetTexture("Content/tile_atlas.png");
+        m_TileAtlas = m_AssetManager.GetTexture("Content/tile_atlas.png");
 
-        // Loop the tile map and set the tile in our tile render system
         TileRenderSystem tileSystem = defaultScene.TileRenderSystem;
-
         // Set the size of each tile before we assign them
         tileSystem.SetTileSize(TILE_SIZE);
 
+        // Loop the tile map and set the tile in our tile render system
         int mapWidth = m_MapData.GetLength(0);
         int mapHeight = m_MapData.GetLength(1);
         for (int x = 0; x < mapWidth; x++)
@@ -140,14 +141,14 @@ public class Game : IGame
             for (int y = 0; y < mapHeight; y++)
             {
                 int tileId = m_MapData[x, y];
-                if (tileMapping.TryGetValue(tileId, out Rect sourceRect))
+                if (m_TileMapping.TryGetValue(tileId, out Rect sourceRect))
                 {
                     // Call the SetTile method to add the tile data to the appropriate chunk
                     // The TileRenderSystem handles the chunking, geometry creation, and VBO flagging.
                     tileSystem.SetTile(
                         mapX: x,
                         mapY: y,
-                        texture: tileAtlas,
+                        texture: m_TileAtlas,
                         sourceRect: sourceRect
                     );
                 }
@@ -161,15 +162,17 @@ public class Game : IGame
         // Which is used internally in the Engine for current rendering
         m_SceneManager.LoadScene(defaultScene);
 
+        // Load an audio clip from our content folder
+        var audioClip = m_AssetManager.GetAudio("Content/audio_file.ogg");
+        m_AudioManager.PlaySound(audioClip);
+
         // We NEED a default camera or the engine will abort since there is no point to render
         // ** Multiple cameras are currently not supported **
-        // Doc: https://ezroot.github.io/Integrity2D/api/Integrity.Rendering.html
 
         Camera2D mainCamera = new Camera2D("MainCamera", m_Settings.Data.WindowWidth, m_Settings.Data.WindowHeight);
 
         // Register the Camera to our Camera Manager
         // Similar to SceneManager it will just set the m_CameraManager.MainCamera to the registered camera
-        // Doc: https://ezroot.github.io/Integrity2D/api/Integrity.Rendering.html
         m_CameraManager.RegisterCamera(mainCamera);
     }
 
@@ -195,12 +198,12 @@ public class Game : IGame
             m_MapData[mapX, mapY] = tileId;
 
             var tileSys = Service.Get<ISceneManager>()!.CurrentScene.TileRenderSystem;
-            if (tileMapping.TryGetValue(tileId, out Rect sourceRect))
+            if (m_TileMapping.TryGetValue(tileId, out Rect sourceRect))
             {
                 tileSys.SetTile(
                     mapX: mapX,
                     mapY: mapY,
-                    texture: tileAtlas,
+                    texture: m_TileAtlas,
                     sourceRect: sourceRect
                 );
             }
